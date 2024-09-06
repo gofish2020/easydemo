@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package hello;
+
+// {输出目录};{编译的*.go文件的包名}
+// 输出目录会结合 --go_out 参数，一起组成绝对路径，编译参数 module=easydemo 是为了输出目录，去掉 easydemo
+// 但是如果是要作为 proto文件被 import的时候，又需要 easydemo
+// 也就是easydemo 输出目录不需要，但是当作包引用又需要；正确的做法，就是要有go mod管理的 module easydemo，编译的时候加 --go_out=module=easydemo:.
+option go_package = "easydemo/proto/hellopb;hellopb";
+
+
+// 要引用的proto文件的路径， 需要结合编译的 -I 参数，一起组成绝对路径
+import "proto/raft.proto";
+
+
+service Hello{
+    rpc send(raft.RaftMessage) returns(raft.RaftMessage) {}
+}

@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package raft;
+
+option go_package = "easydemo/proto/raftpb;raftpb";
+
+service Raft {
+    rpc consensus(stream RaftMessage) returns (stream RaftMessage) {}
+}
+
+
+
+enum MessageType {
+    VOTE = 0;
+    VOTE_RESP = 1;
+    HEARTBEAT = 2;
+    HEARTBEAT_RESP = 3;
+    APPEND_ENTRY = 4;
+    APPEND_ENTRY_RESP = 5;
+    PROPOSE = 6;
+    PROPOSE_RESP = 7;
+    INSTALL_SNAPSHOT = 8;
+    INSTALL_SNAPSHOT_RESP = 9;
+    READINDEX = 10;
+    READINDEX_RESP = 11;
+}
+
+
+enum EntryType {
+NORMAL = 0;
+MEMBER_CHNAGE = 1;
+}
+enum MemberChangeType {
+ADD_NODE = 0;
+REMOVE_NODE = 1;
+}
+
+message LogEntry {
+    EntryType type = 1;
+    uint64 term = 2;
+    uint64 index = 3;
+    bytes data = 4;
+}
+
+message RaftMessage {
+    MessageType msgType = 1;
+    uint64 term = 2;
+    uint64 from = 3;
+    uint64 to = 4;
+    uint64 lastLogIndex = 5;
+    uint64 lastLogTerm = 6;
+    uint64 lastCommit = 7;
+    repeated LogEntry entry = 8;
+    bool success = 9;
+    bytes context = 10;
+  }
