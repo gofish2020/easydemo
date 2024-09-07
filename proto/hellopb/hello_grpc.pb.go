@@ -36,7 +36,7 @@ func NewHelloClient(cc grpc.ClientConnInterface) HelloClient {
 
 func (c *helloClient) Send(ctx context.Context, in *raftpb.RaftMessage, opts ...grpc.CallOption) (*raftpb.RaftMessage, error) {
 	out := new(raftpb.RaftMessage)
-	err := c.cc.Invoke(ctx, "/hello.Hello/send", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/proto.Hello/send", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func _Hello_Send_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/hello.Hello/send",
+		FullMethod: "/proto.Hello/send",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(HelloServer).Send(ctx, req.(*raftpb.RaftMessage))
@@ -93,7 +93,7 @@ func _Hello_Send_Handler(srv interface{}, ctx context.Context, dec func(interfac
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Hello_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "hello.Hello",
+	ServiceName: "proto.Hello",
 	HandlerType: (*HelloServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{

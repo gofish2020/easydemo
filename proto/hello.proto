@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package hello;
+package proto;
 
 // {输出目录};{编译的*.go文件的包名}
 // 输出目录会结合 --go_out 参数，一起组成绝对路径，编译参数 module=easydemo 是为了输出目录，去掉 easydemo
@@ -12,7 +12,6 @@ option go_package = "easydemo/proto/hellopb;hellopb";
 // 要引用的proto文件的路径， 需要结合编译的 -I 参数，一起组成绝对路径
 import "proto/raft.proto";
 
-
 service Hello{
-    rpc send(raft.RaftMessage) returns(raft.RaftMessage) {}
+    rpc send(proto.RaftMessage) returns(proto.RaftMessage) {}
 }

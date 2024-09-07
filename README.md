@@ -16,4 +16,5 @@
 ```
 5. 实现 grpc client/server 
 6. 理解 `stream` 在 `client/server` 之间的双通道流，可以实现客户端和服务端之间的数据相互推送，底层是通过复用`tcp`连接
+7. 利用 `stream`实现文件发送`sendfile`到服务端
 

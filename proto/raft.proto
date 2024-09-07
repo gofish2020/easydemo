@@ -1,11 +1,31 @@
 syntax = "proto3";
 
-package raft;
+package proto;
 
 option go_package = "easydemo/proto/raftpb;raftpb";
 
 service Raft {
     rpc consensus(stream RaftMessage) returns (stream RaftMessage) {}
+}
+
+
+message FileContext {
+    bool islastframe = 1;
+    bytes context = 2;
+    string ext = 3;
+}
+
+message FileInfoResp {
+    bool isok = 1;
+    string name = 2;
+}
+
+
+message Empty {
+
+}
+service File {
+    rpc sendfile( stream FileContext ) returns ( FileInfoResp) {}
 }
 
 

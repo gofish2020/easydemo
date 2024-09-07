@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"time"
 
 	"google.golang.org/grpc"
@@ -47,6 +48,54 @@ func (t *Hello) Send(ctx context.Context, r *raftpb.RaftMessage) (*raftpb.RaftMe
 	}, nil
 }
 
+type File struct {
+	raftpb.UnimplementedFileServer
+}
+
+func (t *File) Sendfile(req raftpb.File_SendfileServer) error {
+
+	fileName := fmt.Sprintf("%d", time.Now().UnixMilli())
+	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm) // 创建临时文件
+	if err != nil {
+		return err
+	}
+
+	ext := ""
+	for {
+		fileContext, err := req.Recv()
+		if err == io.EOF {
+			file.Close()
+			os.Remove(file.Name())
+			fmt.Println("eof", err)
+			return err
+		}
+		if err != nil {
+			file.Close()
+			os.Remove(file.Name())
+			fmt.Println("err", err)
+			return err
+		}
+
+		file.Write(fileContext.Context) // 接收文件数据
+
+		if fileContext.Islastframe { // 最后一帧数据
+			ext = fileContext.Ext // 记录文件后缀
+			break
+		}
+	}
+
+	file.Close()
+	if ext != "" { //存在后缀，重命名文件
+		os.Rename(fileName, fileName+ext)
+	}
+
+	req.SendAndClose(&raftpb.FileInfoResp{ // 返回文件名
+		Isok: true,
+		Name: fileName + ext,
+	})
+	return nil
+}
+
 func Start() {
 
 	lis, err := net.Listen("tcp", ":8088")
@@ -61,8 +110,9 @@ func Start() {
 	srv := grpc.NewServer(opts...)
 
 	raftpb.RegisterRaftServer(srv, &Raft{})
-
 	hellopb.RegisterHelloServer(srv, &Hello{})
+
+	raftpb.RegisterFileServer(srv, &File{})
 
 	err = srv.Serve(lis)
 	if err != nil {

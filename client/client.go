@@ -1,11 +1,14 @@
 package client
 
 import (
+	"bufio"
 	"context"
 	"easydemo/proto/hellopb"
 	"easydemo/proto/raftpb"
 	"fmt"
 	"io"
+	"os"
+	"strings"
 	"time"
 
 	"google.golang.org/grpc"
@@ -23,7 +26,7 @@ func NewClient() *Client {
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials())) // 不安全证书
 
-	// 拨号（地址 + opts）
+	// 拨号
 	conn, err := grpc.NewClient(":8088", opts...)
 	if err != nil {
 		return nil
@@ -95,4 +98,54 @@ func (t *Client) Consensus() {
 		time.Sleep(5 * time.Second)
 	}
 
+}
+
+func (t *Client) SendFile(fileNanme string) error {
+
+	fileClient := raftpb.NewFileClient(t.conn)
+	fileStream, err := fileClient.Sendfile(context.Background())
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Open(fileNanme)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// 创建一个 Reader
+	reader := bufio.NewReader(file)
+	buffer := make([]byte, 1024) // 每次读取 1024 字节
+
+	for {
+		// 读取数据到缓冲区
+		_, err := reader.Read(buffer)
+		if err != nil {
+			if err == io.EOF {
+				fileinfo := &raftpb.FileContext{}
+				fileinfo.Islastframe = true
+				fileinfo.Context = buffer
+				pos := strings.LastIndex(file.Name(), ".")
+				if pos != -1 {
+					fileinfo.Ext = file.Name()[pos:]
+				}
+				fileStream.Send(fileinfo)
+			}
+			break
+		}
+
+		fileinfo := &raftpb.FileContext{}
+		fileinfo.Islastframe = false
+		fileinfo.Context = buffer
+		fileStream.Send(fileinfo)
+
+	}
+	res, err := fileStream.CloseAndRecv()
+	if err != nil {
+		fmt.Println(res, err)
+		return err
+	}
+	fmt.Println(res)
+	return nil
 }

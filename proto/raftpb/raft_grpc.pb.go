@@ -34,7 +34,7 @@ func NewRaftClient(cc grpc.ClientConnInterface) RaftClient {
 }
 
 func (c *raftClient) Consensus(ctx context.Context, opts ...grpc.CallOption) (Raft_ConsensusClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Raft_ServiceDesc.Streams[0], "/raft.Raft/consensus", opts...)
+	stream, err := c.cc.NewStream(ctx, &Raft_ServiceDesc.Streams[0], "/proto.Raft/consensus", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,7 @@ func (x *raftConsensusServer) Recv() (*RaftMessage, error) {
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Raft_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "raft.Raft",
+	ServiceName: "proto.Raft",
 	HandlerType: (*RaftServer)(nil),
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
@@ -130,6 +130,126 @@ var Raft_ServiceDesc = grpc.ServiceDesc{
 			StreamName:    "consensus",
 			Handler:       _Raft_Consensus_Handler,
 			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
+	Metadata: "proto/raft.proto",
+}
+
+// FileClient is the client API for File service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type FileClient interface {
+	Sendfile(ctx context.Context, opts ...grpc.CallOption) (File_SendfileClient, error)
+}
+
+type fileClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewFileClient(cc grpc.ClientConnInterface) FileClient {
+	return &fileClient{cc}
+}
+
+func (c *fileClient) Sendfile(ctx context.Context, opts ...grpc.CallOption) (File_SendfileClient, error) {
+	stream, err := c.cc.NewStream(ctx, &File_ServiceDesc.Streams[0], "/proto.File/sendfile", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &fileSendfileClient{stream}
+	return x, nil
+}
+
+type File_SendfileClient interface {
+	Send(*FileContext) error
+	CloseAndRecv() (*FileInfoResp, error)
+	grpc.ClientStream
+}
+
+type fileSendfileClient struct {
+	grpc.ClientStream
+}
+
+func (x *fileSendfileClient) Send(m *FileContext) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *fileSendfileClient) CloseAndRecv() (*FileInfoResp, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(FileInfoResp)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// FileServer is the server API for File service.
+// All implementations must embed UnimplementedFileServer
+// for forward compatibility
+type FileServer interface {
+	Sendfile(File_SendfileServer) error
+	mustEmbedUnimplementedFileServer()
+}
+
+// UnimplementedFileServer must be embedded to have forward compatible implementations.
+type UnimplementedFileServer struct {
+}
+
+func (UnimplementedFileServer) Sendfile(File_SendfileServer) error {
+	return status.Errorf(codes.Unimplemented, "method Sendfile not implemented")
+}
+func (UnimplementedFileServer) mustEmbedUnimplementedFileServer() {}
+
+// UnsafeFileServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to FileServer will
+// result in compilation errors.
+type UnsafeFileServer interface {
+	mustEmbedUnimplementedFileServer()
+}
+
+func RegisterFileServer(s grpc.ServiceRegistrar, srv FileServer) {
+	s.RegisterService(&File_ServiceDesc, srv)
+}
+
+func _File_Sendfile_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(FileServer).Sendfile(&fileSendfileServer{stream})
+}
+
+type File_SendfileServer interface {
+	SendAndClose(*FileInfoResp) error
+	Recv() (*FileContext, error)
+	grpc.ServerStream
+}
+
+type fileSendfileServer struct {
+	grpc.ServerStream
+}
+
+func (x *fileSendfileServer) SendAndClose(m *FileInfoResp) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *fileSendfileServer) Recv() (*FileContext, error) {
+	m := new(FileContext)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// File_ServiceDesc is the grpc.ServiceDesc for File service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var File_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "proto.File",
+	HandlerType: (*FileServer)(nil),
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "sendfile",
+			Handler:       _File_Sendfile_Handler,
 			ClientStreams: true,
 		},
 	},
