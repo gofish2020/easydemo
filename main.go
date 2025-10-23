@@ -28,7 +28,7 @@ func main() {
 		})
 
 		// 演示: 双向 stream
-		go cli.Consensus() // 在tcp上开另外一个client stream
+		go cli.Consensus() // 在tcp上开一个client stream
 		time.Sleep(20 * time.Second)
 
 		// 单向 stream：客户端发送文件到服务
