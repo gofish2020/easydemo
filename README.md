@@ -15,6 +15,10 @@ typora-copy-images-to: ./images
 
 ![](./images/image-20251023190543494.png)
 
+*如果想重新编译 `proto`文件，运行 `./buildProto.sh`*
+
+
+
 ## 项目目标：
 
 ### 1.学习如何编写 `proto`文件
@@ -269,7 +273,7 @@ service Hello{
 
 
 
-### 7. 具有双流 stream能力的 grpc
+### 7. 具有双向流 stream能力的 grpc
 
 可以实现客户端和服务端之间的数据相互推送
 
@@ -492,6 +496,6 @@ https://xiaolincoding.com/network/2_http/http2.html
 
 https://xiaolincoding.com/network/2_http/http_websocket.html
 
-当然还有一个`http3.0`协议，不过是基于 `UDP`的，真正落实应用起来，道阻且长，感兴趣的也可以看下实现原理
+当然还有一个`http3.0`协议，不过是传输层是基于 `UDP`的，真正落实应用起来，道阻且长，感兴趣的也可以看下实现原理
 
 https://xiaolincoding.com/network/2_http/http3.html
