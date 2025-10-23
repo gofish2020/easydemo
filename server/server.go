@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc"
 )
 
+// Raft对象：这个就是演示双向stream的业务实现
 type Raft struct {
 	raftpb.UnimplementedRaftServer
 }
@@ -32,12 +33,13 @@ func (t *Raft) Consensus(serverStream raftpb.Raft_ConsensusServer) error {
 		}
 
 		fmt.Println("server", msg.From, msg.Term)
-		msg.Term++
+		msg.Term++ // 将消息的 term+1 再发回给客户端
 		serverStream.Send(msg)
 		time.Sleep(5 * time.Second)
 	}
 }
 
+// Hello对象：我们平时写的最多远程过程调用的业务实现
 type Hello struct {
 	hellopb.UnimplementedHelloServer
 }
@@ -48,6 +50,7 @@ func (t *Hello) Send(ctx context.Context, r *raftpb.RaftMessage) (*raftpb.RaftMe
 	}, nil
 }
 
+// File对象演示：客户端通过stream发送文件到服务端，最后服务端接收完成以后，回复一个确认消息
 type File struct {
 	raftpb.UnimplementedFileServer
 }
@@ -89,7 +92,7 @@ func (t *File) Sendfile(req raftpb.File_SendfileServer) error {
 		os.Rename(fileName, fileName+ext)
 	}
 
-	req.SendAndClose(&raftpb.FileInfoResp{ // 返回文件名
+	req.SendAndClose(&raftpb.FileInfoResp{ // 返回文件名，告知已经接收完成
 		Isok: true,
 		Name: fileName + ext,
 	})
@@ -98,6 +101,7 @@ func (t *File) Sendfile(req raftpb.File_SendfileServer) error {
 
 func Start() {
 
+	// 8088监听端口
 	lis, err := net.Listen("tcp", ":8088")
 
 	if err != nil {
@@ -106,14 +110,17 @@ func Start() {
 		return
 	}
 
+	// 创建 gprc 服务
 	var opts []grpc.ServerOption
 	srv := grpc.NewServer(opts...)
 
+	// 注册服务端业务处理对象
 	raftpb.RegisterRaftServer(srv, &Raft{})
 	hellopb.RegisterHelloServer(srv, &Hello{})
-
 	raftpb.RegisterFileServer(srv, &File{})
 
+	// 启动服务
+	fmt.Println("启动服务...")
 	err = srv.Serve(lis)
 	if err != nil {
 		fmt.Println("启动失败")

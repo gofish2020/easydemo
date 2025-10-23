@@ -2,14 +2,14 @@ syntax = "proto3";
 
 package proto;
 
-// {输出目录};{编译的*.go文件的【包名】}  这个是为了编译成go文件，存储目录
-// {输出目录} 有两种含义： 
-// 1. 编译的 *.go 文件的存储路径 （同时需要 --go_out=module=easydemo:. 编译配置,为了去掉一次easydemo）
+// go_package 的含义：  {输出目录};{编译后的 *.go文件的【package包名】}  
+// {输出目录} 含义： 
+// 1. 编译成的 *.go 文件的存储路径 （同时需要配合 --go_out=module=easydemo:. 编译配置,为了去掉一次easydemo）
 // 2. 作为 go package的时候，import的路径
 option go_package = "easydemo/proto/hellopb;hellopb";
 
 
-// 要引用的proto文件的路径， 需要结合编译的 -I 参数，一起组成绝对路径  这个是作为proto文件，引用需要的
+// 要引用的proto文件的路径， 需要结合编译的 -I 参数，一起组成绝对路径 
 import "proto/raft.proto";
 
 service Hello{
